@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "sbp-beta"
+version = "0.1.0"
+description = ""
+authors = ["Stephen Jonany <sjonany@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+instaloader = "^4.11"
+tqdm = "^4.66.2"
+google-api-python-client = "^2.126.0"
+google-auth-httplib2 = "^0.2.0"
+google-auth-oauthlib = "^1.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
