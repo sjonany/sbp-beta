@@ -7,6 +7,7 @@ from typing import List
 
 # Project imports
 import insta
+from insta import ParsedPost
 import sheet
 
 # Posts older than this number of days will get cleared out
@@ -29,7 +30,26 @@ def merge_and_filter_posts(posts1, posts2):
     recent_posts = [post for post in merged_posts if datetime.strptime(post.date, "%Y/%m/%d") >= cutoff_date]
     return recent_posts
 
+def print_user_stats(posts):
+    tally = {}
+    for post in posts:
+        account_name = post.account_name
+        tally[account_name] = tally.get(account_name, 0) + 1
+
+    # Sort the tally in descending order of occurrence
+    sorted_tally = sorted(tally.items(), key=lambda x: x[1], reverse=True)
+
+    # Print the tally in descending order
+    for account_name, count in sorted_tally:
+        print(f"{account_name}: {count}")
+
 if __name__ == "__main__":
+    """
+    # Re-enable this to debug.
+    insta.debug_one_account("kmckayclimbs098")
+    if True:
+        exit()
+    """
     print("Scraping instagram...")
     posts_from_insta = insta.get_all_recent_posts()
     
@@ -41,3 +61,6 @@ if __name__ == "__main__":
 
     print("Writing to spreadsheet...")
     sheet.write_to_spreadsheet(sheet_client, posts_final)
+
+    print("User stats:")
+    print_user_stats(posts_final)

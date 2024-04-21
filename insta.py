@@ -8,24 +8,28 @@ import re
 from typing import List
 from tqdm import tqdm
 
-ParsedPost = namedtuple('ParsedPost', ['account_name', 'grade', 'date', 'time', 'caption', 'reel_url', 'photo_url', 'gym_location'])
+POST_FIELDS = ['account_name', 'grade', 'date', 'time', 'caption', 'reel_url', 'photo_url', 'gym_location']
+ParsedPost = namedtuple('ParsedPost', POST_FIELDS, defaults=(None,) * len(POST_FIELDS))
 
 """
 Accounts to scrape from
 E.g. https://www.instagram.com/monke._.mode/
 """
 WHITELISTED_INSTA_ACCOUNTS = [
-    "monke._.mode",
+    "cc.climbs.rocks",
     "ccf.climbs",
-    "climb.try.again",
-    "littlebox.climbs",
-    "danlebuiclimb",
-    "ccf.climbs",
-    "tiffnyclimbs",
-    "m.j.climbing",
-    "tiff.plus.ed.climb",
     "climb.on.kev.on",
+    "climb.try.again",
+    "climbellamy",
+    "danlebuiclimb",
     "jason_boulders",
+    "kmckayclimbs098",
+    "littlebox.climbs",
+    "m.j.climbing",
+    "monke._.mode",
+    "tiff.plus.ed.climb",
+    "tiffboulderland",
+    "tiffnyclimbs",
     "wl.climbs",
 ]
 
@@ -39,15 +43,22 @@ NUM_RECENT_POSTS = 30
 L = instaloader.Instaloader()
 L.login("monke._.mode", open('secret/insta_password.txt', 'r').read())
 
+def debug_one_account(account_name):
+    print(query_recent_posts(account_name, NUM_RECENT_POSTS, debug=True))
 
 def get_all_recent_posts():
     parsed_posts = []
+    accounts_with_no_recent_posts = []
     for account_name in tqdm(WHITELISTED_INSTA_ACCOUNTS):
         print(f"Processing posts from {account_name}")
-        parsed_posts.extend(query_recent_posts(account_name, NUM_RECENT_POSTS))
+        recent_posts = query_recent_posts(account_name, NUM_RECENT_POSTS)
+        if len(recent_posts) == 0:
+            accounts_with_no_recent_posts.append(account_name)
+        parsed_posts.extend(recent_posts)
+    print("Accounts with no recent posts: ", accounts_with_no_recent_posts)
     return parsed_posts
 
-def query_recent_posts(account_name: str, num_recent_posts: int) -> List[ParsedPost]:
+def query_recent_posts(account_name: str, num_recent_posts: int, debug: bool = False) -> List[ParsedPost]:
     """
     Get recent climbing-related reels from `account_name`
     """
@@ -62,7 +73,8 @@ def query_recent_posts(account_name: str, num_recent_posts: int) -> List[ParsedP
     # Iterate over recent posts
     for post in profile.get_posts():
         num_post += 1
-
+        if debug:
+            pdb.set_trace()
         if num_post > NUM_RECENT_POSTS:
             break
         if not is_climbing_post(post):
@@ -120,8 +132,8 @@ grade_map = {
     "pink": "V6-8",
     "🩷": "V6-8",
     "🌸":"V6-8",
-    "white": "V7+",
-    "🤍": "V7+"
+    "white": "V8-10",
+    "🤍": "V8-10"
 }
 def get_post_grade(post, post_tokens):
     """
@@ -132,10 +144,10 @@ def get_post_grade(post, post_tokens):
     1. Grade range. E.g."V3-5"
     2. Color. E.g. "orange"
     """
-    caption = post.caption
+    caption = post.caption.lower()
 
     # First pass: Check for grade range string like "V3-5"
-    match = re.search(r'V\d+-\d+', caption)
+    match = re.search(r'v\d+-\d+', caption)
     if match:
         return match.group()
 
